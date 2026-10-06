@@ -51,6 +51,23 @@ public sealed record LanguageInfo(string Code, string DisplayName, string Englis
         return la.Code == lb.Code;
     }
 
+    private static readonly HashSet<string> LatinScript = new() { "en", "fr", "de", "es", "it", "pt", "vi" };
+
+    /// <summary>
+    /// Decides which language to translate into, given the language detected from the text.
+    /// <see cref="DetectScript"/> reports every Latin-script text as "en", so when both the text and the target
+    /// are Latin-script the answer is not <c>Certain</c>: the target is returned and the model must check
+    /// whether the text is already in it. In every other case the target is decided here, because leaving the
+    /// "already in the target language?" judgement to the model fails on mixed text (mostly Chinese with English words).
+    /// </summary>
+    public static (string Language, bool Certain) ResolveTarget(string detected, string target, string fallback)
+    {
+        var t = Find(target)?.Code ?? target;
+        bool ambiguous = detected == "en" && LatinScript.Contains(t);
+        if (ambiguous) return (target, false);
+        return SameLanguage(detected, target) ? (fallback, true) : (target, true);
+    }
+
     /// <summary>
     /// Picks the voice for reading text. <paramref name="accent"/> is "US" or "UK" and only affects English.
     /// </summary>

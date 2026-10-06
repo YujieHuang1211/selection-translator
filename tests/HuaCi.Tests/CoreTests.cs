@@ -95,6 +95,20 @@ public class LanguageInfoTests
         Assert.False(LanguageInfo.SameLanguage("en", "zh-CN"));
     }
 
+    [Theory]
+    [InlineData("zh-CN", "zh-CN", "en", "en", true)]   // 中文原文、目标中文 → 英文
+    [InlineData("en", "zh-CN", "en", "zh-CN", true)]   // 拉丁文字、目标中文 → 中文（确定）
+    [InlineData("ja", "zh-CN", "en", "zh-CN", true)]
+    [InlineData("zh-CN", "ja", "en", "ja", true)]
+    [InlineData("en", "en", "zh-CN", "en", false)]     // 拉丁文字、目标也是拉丁语言 → 不确定，交给模型
+    [InlineData("en", "fr", "zh-CN", "fr", false)]
+    public void ResolveTarget(string detected, string target, string fallback, string expected, bool certain)
+    {
+        var r = LanguageInfo.ResolveTarget(detected, target, fallback);
+        Assert.Equal(expected, r.Language);
+        Assert.Equal(certain, r.Certain);
+    }
+
     [Fact]
     public void VoiceFor_respects_english_accent()
     {

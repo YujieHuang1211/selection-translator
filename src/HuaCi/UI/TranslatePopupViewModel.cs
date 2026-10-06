@@ -75,7 +75,7 @@ public sealed partial class TranslatePopupViewModel : ObservableObject
 
     /// <summary>The language we actually translate into: target, or fallback when the text is already in the target language.</summary>
     public string EffectiveTarget =>
-        LanguageInfo.SameLanguage(SourceLang, Settings.TargetLanguage) ? Settings.FallbackLanguage : Settings.TargetLanguage;
+        LanguageInfo.ResolveTarget(SourceLang, Settings.TargetLanguage, Settings.FallbackLanguage).Language;
 
     public string EffectiveTargetName => LanguageInfo.NameOf(EffectiveTarget);
 

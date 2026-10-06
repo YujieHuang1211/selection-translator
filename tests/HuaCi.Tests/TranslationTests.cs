@@ -87,11 +87,36 @@ public class PromptsTests
     private static readonly TranslationRequest Request = new("Hello", "zh-CN", "en", "zh-CN", "CET6", "deepseek/deepseek-v4.1-flash");
 
     [Fact]
-    public void Translation_prompt_contains_direction_rule()
+    public void English_text_gets_an_explicit_chinese_target()
     {
         var p = Prompts.TranslationSystem(Request);
-        Assert.Contains("into Simplified Chinese", p);
-        Assert.Contains("already written in Simplified Chinese, translate it into English", p);
+        Assert.Contains("Translate it into Simplified Chinese.", p);
+        Assert.DoesNotContain("already written", p);
+    }
+
+    [Fact]
+    public void Mostly_chinese_text_with_english_words_is_translated_into_english()
+    {
+        // 回归用例：中文为主、夹杂英文单词时，模型曾把它“翻译”成中文
+        var r = Request with { Text = "我的意思是如果我们朋友想要从github中下载这个软件并使用他们应该如何使用" };
+        var p = Prompts.TranslationSystem(r);
+        Assert.Contains("Translate it into English.", p);
+        Assert.DoesNotContain("already written", p);
+    }
+
+    [Fact]
+    public void Japanese_text_gets_explicit_target()
+    {
+        var p = Prompts.TranslationSystem(Request with { Text = "これは日本語の文です" });
+        Assert.Contains("Translate it into Simplified Chinese.", p);
+    }
+
+    [Fact]
+    public void Latin_text_with_latin_target_keeps_the_model_side_rule()
+    {
+        // 法语/英语等拉丁字母文本本地分不清，目标又是拉丁语言时仍交给模型判断
+        var p = Prompts.TranslationSystem(Request with { Text = "Bonjour tout le monde", TargetLanguage = "en", FallbackLanguage = "zh-CN" });
+        Assert.Contains("Translate it into English. If the text is already written in English, translate it into Simplified Chinese instead.", p);
     }
 
     [Fact]
