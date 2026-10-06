@@ -20,7 +20,7 @@ Windows 全局划词翻译工具。浏览网页、在 Chrome 里看 PDF、或者
 
 不需要安装 .NET，也不需要自己编译。
 
-1. 打开 [Releases 页面](https://github.com/YujieHuang1211/selection-translator/releases/latest)，下载 `HuaCi-v1.0.0-win-x64.exe`。
+1. 打开 [Releases 页面](https://github.com/YujieHuang1211/selection-translator/releases/latest)，下载最新的 `HuaCi-v版本号-win-x64.exe`。
 2. 把它放到一个固定的文件夹，例如 `D:\Tools\HuaCi\`，双击运行。
    - 如果 Windows 弹出「Windows 已保护你的电脑」：点 **更多信息 → 仍要运行**。软件没有购买代码签名证书，所以会有这个提示，只在第一次出现。
 3. 第一次运行会自动打开设置窗口：
