@@ -16,14 +16,28 @@ Windows 全局划词翻译工具。浏览网页、在 Chrome 里看 PDF、或者
 - **模型可选**：使用 OpenRouter，默认 `deepseek/deepseek-v4.1-flash`，设置里可搜索切换任意模型
 - 浅色 / 深色主题跟随系统，支持多显示器和高 DPI，开机自启
 
+## 下载与安装
+
+不需要安装 .NET，也不需要自己编译。
+
+1. 打开 [Releases 页面](https://github.com/YujieHuang1211/selection-translator/releases/latest)，下载 `HuaCi-v1.0.0-win-x64.exe`。
+2. 把它放到一个固定的文件夹，例如 `D:\Tools\HuaCi\`，双击运行。
+   - 如果 Windows 弹出「Windows 已保护你的电脑」：点 **更多信息 → 仍要运行**。软件没有购买代码签名证书，所以会有这个提示，只在第一次出现。
+3. 第一次运行会自动打开设置窗口：
+   - 到 <https://openrouter.ai/keys> 注册并创建一个 API Key（需要先在 OpenRouter 充一点值；默认模型 DeepSeek V4.1 Flash 很便宜，一次划词（含重点词汇讲解）大约 0.003–0.005 美元，充 5 美元可以用一千次以上）
+   - 把 Key 粘贴到「OpenRouter API Key」，点「测试连接」，显示 ✓ 后点「保存」
+4. 想开机自动运行：设置里打开「开机自动启动」。
+
+> 系统要求：Windows 10 1809 或更新版本、Windows 11，64 位。翻译和在线发音需要能访问 openrouter.ai 和微软语音服务。
+
 ## 使用
 
-1. 运行 `publish\HuaCi\HuaCi.exe`（本机已装 .NET 8）。拷到其他电脑可以用 `publish\HuaCi-portable\HuaCi.exe`，它不依赖 .NET。
-2. 第一次运行会打开设置，填入 OpenRouter API Key（在 <https://openrouter.ai/keys> 创建）后点「测试连接」，再点「保存」。
+1. 运行后程序在右下角托盘（可能收在 ∧ 里面），没有主窗口。
+2. API Key 只保存在你自己的电脑上，并用 Windows 账户加密。
 3. 程序在右下角托盘运行：
    - **左键单击托盘图标**：打开翻译输入框
    - **右键**：历史记录与生词本、暂停划词、设置、退出
-4. 选中文字后点「译」图标，或按快捷键。
+4. 选中文字后点「译」图标，或按快捷键（默认 Alt+Q；被别的软件占用时会自动换成 Ctrl+Alt+D 并弹通知提示）。
 
 弹窗里的小技巧：
 
