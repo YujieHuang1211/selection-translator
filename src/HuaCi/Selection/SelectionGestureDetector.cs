@@ -2,12 +2,13 @@ namespace HuaCi.Selection;
 
 public enum SelectionGestureKind { Drag, MultiClick, ShiftClick }
 
-public readonly record struct SelectionGesture(SelectionGestureKind Kind, int X, int Y);
+/// <param name="TextCursorSeen">Whether an I-beam cursor was seen at press or release. When false the caller
+/// should re-check the cursor shortly after release (e.g. drags from RichEdit's line-selection margin keep an arrow cursor).</param>
+public readonly record struct SelectionGesture(SelectionGestureKind Kind, int X, int Y, bool TextCursorSeen);
 
 /// <summary>
 /// Decides from raw left-button down/up events whether the user probably just selected text:
-/// a drag, a double/triple click, or a shift+click — started or ended over a text (I-beam) cursor.
-/// Pure logic, no Win32 calls, so it is unit-testable.
+/// a drag, a double/triple click, or a shift+click. Pure logic, no Win32 calls, so it is unit-testable.
 /// </summary>
 public sealed class SelectionGestureDetector
 {
@@ -30,9 +31,6 @@ public sealed class SelectionGestureDetector
         _dragThreshold = dragThreshold;
     }
 
-    /// <summary>When false, gestures count even if the cursor was not an I-beam (for apps with custom cursors).</summary>
-    public bool RequireTextCursor { get; set; } = true;
-
     public void OnLeftDown(InputEvent e)
     {
         bool sameSpot = Math.Abs(e.X - _lastDownX) <= _doubleClickDistance && Math.Abs(e.Y - _lastDownY) <= _doubleClickDistance;
@@ -52,18 +50,17 @@ public sealed class SelectionGestureDetector
         if (!_isDown) return null;
         _isDown = false;
 
-        bool textCursor = !RequireTextCursor || _downTextCursor || e.IsTextCursor;
-        if (!textCursor) return null;
+        bool textCursor = _downTextCursor || e.IsTextCursor;
 
         int dx = e.X - _downX, dy = e.Y - _downY;
         if (dx * dx + dy * dy >= _dragThreshold * _dragThreshold)
-            return new SelectionGesture(SelectionGestureKind.Drag, e.X, e.Y);
+            return new SelectionGesture(SelectionGestureKind.Drag, e.X, e.Y, textCursor);
 
         if (_clickCount >= 2)
-            return new SelectionGesture(SelectionGestureKind.MultiClick, e.X, e.Y);
+            return new SelectionGesture(SelectionGestureKind.MultiClick, e.X, e.Y, textCursor);
 
         if (_downShift)
-            return new SelectionGesture(SelectionGestureKind.ShiftClick, e.X, e.Y);
+            return new SelectionGesture(SelectionGestureKind.ShiftClick, e.X, e.Y, textCursor);
 
         return null;
     }

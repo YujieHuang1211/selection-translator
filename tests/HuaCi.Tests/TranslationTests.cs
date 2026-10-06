@@ -136,3 +136,44 @@ public class PromptsTests
         Assert.Contains("限流", OpenRouterClient.FriendlyError(System.Net.HttpStatusCode.TooManyRequests, ""));
     }
 }
+
+public class IncrementalAnalysisParserTests
+{
+    private const string Full = """
+        {"source_lang":"en","mode":"text","keywords":[{"word":"a{b}","lemma":"x","phonetic_us":"/eɪ/","phonetic_uk":"","pos":"n.","brief":"含 \"引号\" 和 ] 括号","context_meaning":"","senses":[{"pos":"n.","meaning":"m1","example":"e","example_translation":"t"}],"forms":"","collocations":[]},{"word":"second","lemma":"second","phonetic_us":"","phonetic_uk":"","pos":"adj.","brief":"第二","context_meaning":"","senses":[],"forms":"","collocations":["c"]}]}
+        """;
+
+    [Fact]
+    public void Emits_each_keyword_once_as_soon_as_it_is_complete()
+    {
+        var p = new IncrementalAnalysisParser();
+        var emitted = new List<WordEntry>();
+        // 逐字符喂入，模拟最碎的流式分块
+        foreach (var ch in Full) emitted.AddRange(p.Feed(ch.ToString()));
+
+        Assert.Equal(new[] { "a{b}", "second" }, emitted.Select(e => e.Word));
+        Assert.Equal("eɪ", emitted[0].PhoneticUs);
+        Assert.Equal("en", p.SourceLang);
+        Assert.Equal("text", p.Mode);
+    }
+
+    [Fact]
+    public void First_keyword_is_available_before_the_stream_ends()
+    {
+        var p = new IncrementalAnalysisParser();
+        var cut = Full.IndexOf("{\"word\":\"second\"", StringComparison.Ordinal);
+        var first = p.Feed(Full[..cut]);
+        Assert.Single(first);
+        Assert.Empty(p.Feed(Full[cut..(cut + 20)]));
+        Assert.Single(p.Feed(Full[(cut + 20)..]));
+    }
+
+    [Fact]
+    public void No_keywords_array_yet_returns_nothing()
+    {
+        var p = new IncrementalAnalysisParser();
+        Assert.Empty(p.Feed("{\"source_lang\":\"ja\",\"mo"));
+        Assert.Equal("ja", p.SourceLang);
+        Assert.Null(p.Mode);
+    }
+}

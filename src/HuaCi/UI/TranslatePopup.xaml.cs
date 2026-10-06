@@ -53,6 +53,7 @@ public partial class TranslatePopup : Window
     {
         bool reposition = !IsVisible || !IsPinned;
         _showVersion++;
+        App.Speech?.Warmup();
         BeginAnimation(OpacityProperty, null);
         Scroller.MaxHeight = Math.Min(640, ScreenHelper.WorkHeightDip(anchor) * 0.82) - 50;
 

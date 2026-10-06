@@ -5,6 +5,9 @@ namespace HuaCi.Translation;
 
 public static class Prompts
 {
+    /// <summary>Bump when prompts change so cached results from older prompts are not reused.</summary>
+    public const int Version = 2;
+
     public static readonly IReadOnlyList<(string Code, string Name, string PromptName)> VocabLevels = new[]
     {
         ("CET4", "大学英语四级", "CET-4 (Chinese College English Test Band 4)"),
@@ -39,7 +42,7 @@ public static class Prompts
             Rules:
             - source_lang: BCP-47 code of the text's language, e.g. "en", "ja", "fr", "zh-CN".
             - If the text is a single word, or a short fixed phrase / idiom / phrasal verb (no complete sentence), set mode="word" and return exactly ONE entry in keywords: a complete dictionary entry with 3-6 senses ordered by frequency, each with a natural example sentence in the source language plus its {explain} translation; forms = inflections or derived forms (e.g. "复数 analyses；形容词 analytical"), "" if none; collocations = up to 5 common collocations.
-            - Otherwise set mode="text" and pick 2-6 words or phrases worth learning: words above the {Level(r.VocabLevel)} level, technical terms, idioms, phrasal verbs, or words whose meaning in this context is not the obvious one. Skip proper nouns, numbers and very common words. Return an empty list if nothing qualifies. Give 1-3 senses each; forms "" and collocations up to 3.
+            - Otherwise set mode="text" and pick up to 6 words or phrases worth learning. Assume the learner already knows every word at or below the {Level(r.VocabLevel)} level and NEVER pick those (for CET-6 that excludes everyday words such as "committee", "decision", "planning", "member"). Pick only harder words, technical terms, idioms, phrasal verbs, or words whose meaning in this context differs from their usual meaning. Skip proper nouns and numbers. Return an empty list if nothing qualifies. Give 1-3 senses each; forms "" and collocations up to 3.
             - If the text is in {explain} (the learner's own language), choose its key terms and teach the {fallback} way to say them: brief and meaning give the {fallback} expressions, examples are in {fallback}.
             - word: exactly as it appears in the text. lemma: dictionary form.
             - phonetic_us / phonetic_uk: IPA without slashes for English (US and UK). For other languages put the reading in phonetic_us (Japanese: kana + romaji; Chinese: pinyin with tone marks; others: romanization or IPA) and "" in phonetic_uk.

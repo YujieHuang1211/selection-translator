@@ -21,14 +21,18 @@ public static class ClipboardGuard
         public bool IsEmpty => Data.Count == 0;
     }
 
-    public static Snapshot Capture()
+    /// <summary>Returns null if the clipboard could not be read (e.g. locked by another app) — then never restore,
+    /// because "restoring" an empty snapshot would wipe the user's clipboard.</summary>
+    public static Snapshot? Capture()
     {
         var snapshot = new Snapshot();
-        Retry(() =>
+        bool hadUnsupportedContent = false;
+        bool ok = Retry(() =>
         {
             snapshot.Data.Clear();
             var obj = Clipboard.GetDataObject();
             if (obj == null) return;
+            hadUnsupportedContent = obj.GetFormats(false).Length > 0;
             foreach (var format in PreservedFormats)
             {
                 try
@@ -43,6 +47,8 @@ public static class ClipboardGuard
                 }
             }
         });
+        // 剪贴板里有内容但都是我们备份不了的私有格式：同样不要“恢复”成空
+        if (!ok || (snapshot.IsEmpty && hadUnsupportedContent)) return null;
         return snapshot;
     }
 
@@ -68,14 +74,14 @@ public static class ClipboardGuard
         return text;
     }
 
-    private static void Retry(Action action)
+    private static bool Retry(Action action)
     {
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < 8; i++)
         {
             try
             {
                 action();
-                return;
+                return true;
             }
             catch (COMException)
             {
@@ -87,5 +93,6 @@ public static class ClipboardGuard
                 Thread.Sleep(25);
             }
         }
+        return false;
     }
 }

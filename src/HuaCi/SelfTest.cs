@@ -53,8 +53,12 @@ internal static class SelfTest
             var analysisTask = Task.Run(async () =>
             {
                 var t = System.Diagnostics.Stopwatch.StartNew();
-                var r = await service.AnalyzeAsync(request, CancellationToken.None);
-                return (r, t.ElapsedMilliseconds);
+                long firstCard = -1;
+                var r = await service.AnalyzeAsync(request, CancellationToken.None, (_, _, fresh) =>
+                {
+                    if (fresh.Count > 0 && firstCard < 0) firstCard = t.ElapsedMilliseconds;
+                });
+                return (r, t.ElapsedMilliseconds, firstCard);
             });
             await foreach (var part in service.TranslateStreamAsync(request, CancellationToken.None))
             {
@@ -64,8 +68,18 @@ internal static class SelfTest
             W($"译文：{sb.ToString().Trim()}");
             W($"  首字 {firstTokenMs} ms，完成 {sw.ElapsedMilliseconds} ms");
 
-            var (analysis, analysisMs) = await analysisTask;
-            W($"解析（{analysisMs} ms）：mode={analysis.Mode}, source_lang={analysis.SourceLang}, 词数={analysis.Keywords.Count}");
+            W($"  HTTP 版本：{OpenRouterClient.LastHttpVersion}");
+
+            // 连接已热：再测一次首字延迟（换个句子避免任何缓存）
+            var warm = request with { Text = "The quick brown fox jumps over the lazy dog." };
+            var sw2 = System.Diagnostics.Stopwatch.StartNew();
+            long warmFirst = -1;
+            await foreach (var _ in service.TranslateStreamAsync(warm, CancellationToken.None))
+                if (warmFirst < 0) warmFirst = sw2.ElapsedMilliseconds;
+            W($"  连接复用后首字 {warmFirst} ms，完成 {sw2.ElapsedMilliseconds} ms");
+
+            var (analysis, analysisMs, firstCardMs) = await analysisTask;
+            W($"解析：首个词卡 {firstCardMs} ms，全部完成 {analysisMs} ms；mode={analysis.Mode}, source_lang={analysis.SourceLang}, 词数={analysis.Keywords.Count}");
             W(JsonSerializer.Serialize(analysis, new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }));
             if (sb.Length == 0) failures++;
         }
@@ -80,10 +94,18 @@ internal static class SelfTest
         var lang = LanguageInfo.DetectScript(text);
         try
         {
-            var mp3 = await new EdgeTtsClient().SynthesizeAsync(text, LanguageInfo.VoiceFor(lang), 1.0, CancellationToken.None);
+            using var edge = new EdgeTtsClient();
+            var swTts = System.Diagnostics.Stopwatch.StartNew();
+            var mp3 = await edge.SynthesizeAsync(text, LanguageInfo.VoiceFor(lang), 1.0, CancellationToken.None);
             var path = Path.Combine(audioDir, "edge.mp3");
             await File.WriteAllBytesAsync(path, mp3);
-            W($"Edge 在线语音：{mp3.Length} 字节 → {path}");
+            W($"Edge 在线语音：{mp3.Length} 字节，{swTts.ElapsedMilliseconds} ms → {path}");
+            foreach (var probe in new[] { "meticulous", "expedition", text })
+            {
+                swTts.Restart();
+                var b = await edge.SynthesizeAsync(probe, LanguageInfo.UsEnglishVoice, 1.0, CancellationToken.None);
+                W($"  单词 {probe}：{b.Length} 字节，{swTts.ElapsedMilliseconds} ms");
+            }
             if (mp3.Length < 1000) failures++;
         }
         catch (Exception ex)

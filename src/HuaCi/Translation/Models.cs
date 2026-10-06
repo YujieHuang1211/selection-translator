@@ -51,5 +51,5 @@ public sealed record TranslationRequest(
     string VocabLevel,
     string Model)
 {
-    public string CacheKey => string.Join('\u001F', Text, TargetLanguage, FallbackLanguage, ExplainLanguage, VocabLevel, Model);
+    public string CacheKey => string.Join('\u001F', Text, TargetLanguage, FallbackLanguage, ExplainLanguage, VocabLevel, Model, Prompts.Version);
 }

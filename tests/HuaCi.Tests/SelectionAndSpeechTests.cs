@@ -31,19 +31,13 @@ public class SelectionGestureDetectorTests
     }
 
     [Fact]
-    public void Drag_with_arrow_cursor_is_ignored_when_text_cursor_required()
+    public void Drag_with_arrow_cursor_is_reported_as_needing_cursor_recheck()
     {
         var d = new SelectionGestureDetector();
         d.OnLeftDown(Down(100, 100, 1000, ibeam: false));
-        Assert.Null(d.OnLeftUp(Up(400, 300, 1300, ibeam: false)));
-    }
-
-    [Fact]
-    public void Drag_with_arrow_cursor_counts_when_text_cursor_not_required()
-    {
-        var d = new SelectionGestureDetector { RequireTextCursor = false };
-        d.OnLeftDown(Down(100, 100, 1000, ibeam: false));
-        Assert.NotNull(d.OnLeftUp(Up(400, 300, 1300, ibeam: false)));
+        var g = d.OnLeftUp(Up(400, 300, 1300, ibeam: false));
+        Assert.NotNull(g);
+        Assert.False(g!.Value.TextCursorSeen);
     }
 
     [Fact]
@@ -51,7 +45,7 @@ public class SelectionGestureDetectorTests
     {
         var d = new SelectionGestureDetector();
         d.OnLeftDown(Down(10, 100, 1000, ibeam: false));
-        Assert.NotNull(d.OnLeftUp(Up(300, 140, 1300, ibeam: true)));
+        Assert.True(d.OnLeftUp(Up(300, 140, 1300, ibeam: true))?.TextCursorSeen);
     }
 
     [Fact]

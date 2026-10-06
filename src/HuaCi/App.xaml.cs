@@ -53,6 +53,15 @@ public partial class App : Application
             return;
         }
 
+        if (e.Args.Contains("--snapshot"))
+        {
+            InitServices();
+            Speech = new SpeechService(() => SettingsStore.Current);
+            var code = await UiSnapshot.RunAsync(e.Args);
+            Shutdown(code);
+            return;
+        }
+
         _mutex = new Mutex(true, MutexName, out bool isFirst);
         if (!isFirst)
         {
@@ -76,9 +85,11 @@ public partial class App : Application
             Notify("在线语音暂时不可用", "已自动改用 Windows 离线语音朗读。");
 
         Controller = new SelectionController();
+        string? hotkeyMessage = null;
         try
         {
-            Controller.Start();
+            hotkeyMessage = Controller.Start();
+            PersistActiveHotkey();
         }
         catch (Exception ex)
         {
@@ -96,10 +107,14 @@ public partial class App : Application
         {
             ShowSettings();
         }
+        else if (hotkeyMessage != null)
+        {
+            Notify("快捷键提示", hotkeyMessage);
+        }
         else if (!e.Args.Contains("--background"))
         {
-            Notify("划词翻译已在后台运行",
-                $"选中文字后点击旁边的「译」图标即可翻译，或按 {s.Hotkey} 直接翻译。右键托盘图标可打开设置。");
+            var hotkeyTip = string.IsNullOrEmpty(s.Hotkey) ? "" : $"，或按 {s.Hotkey} 直接翻译";
+            Notify("划词翻译已在后台运行", $"选中文字后点击旁边的「译」图标即可翻译{hotkeyTip}。右键托盘图标可打开设置。");
         }
     }
 
@@ -139,8 +154,9 @@ public partial class App : Application
         Dispatcher.BeginInvoke(() =>
         {
             ApplyTheme(s.Theme);
-            var hotkeyError = Controller?.ApplySettings(s);
-            if (hotkeyError != null) Notify("快捷键不可用", hotkeyError);
+            var hotkeyMessage = Controller?.ApplySettings(s);
+            if (hotkeyMessage != null) Notify("快捷键提示", hotkeyMessage);
+            PersistActiveHotkey();
             try
             {
                 if (AutoStart.IsEnabled() != s.AutoStart) AutoStart.Set(s.AutoStart);
@@ -150,6 +166,18 @@ public partial class App : Application
                 Log("设置开机自启失败", ex);
             }
         });
+    }
+
+    /// <summary>After an automatic hotkey fallback, store the key that actually works so Settings shows it.</summary>
+    private static void PersistActiveHotkey()
+    {
+        var active = Controller?.ActiveHotkey;
+        var s = SettingsStore.Current;
+        if (active == null || string.Equals(active, s.Hotkey, StringComparison.OrdinalIgnoreCase)) return;
+        if (Hotkey.TryParse(s.Hotkey, out var configured) && configured.ToString() == active) return;
+        var updated = s.Clone();
+        updated.Hotkey = active;
+        SettingsStore.Save(updated);
     }
 
     // ---------------- windows ----------------

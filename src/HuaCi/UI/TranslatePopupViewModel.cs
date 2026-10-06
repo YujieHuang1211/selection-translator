@@ -195,18 +195,33 @@ public sealed partial class TranslatePopupViewModel : ObservableObject
             Translation = cached.Translation;
             ApplyAnalysis(cached.Analysis);
             IsTranslating = IsAnalyzing = false;
+            PrefetchAudio();
             return;
         }
 
         IsTranslating = true;
         IsAnalyzing = true;
+        PrefetchAudio(); // 先预合成原文朗读，词汇解析出来后再补上单词
 
         var translateTask = StreamTranslationAsync(request, run, ct);
         var analysisTask = AnalyzeAsync(request, run, ct);
         await Task.WhenAll(translateTask, analysisTask);
 
         if (run == _run && !ct.IsCancellationRequested && ErrorMessage == null)
+        {
             App.Translator.Remember(request, Translation, await analysisTask);
+            PrefetchAudio();
+        }
+    }
+
+    /// <summary>Pre-synthesizes the original text and key words so clicking a speaker icon plays immediately.</summary>
+    private void PrefetchAudio()
+    {
+        if (App.Speech == null || !HasSource) return;
+        var accent = Settings.EnglishAccent;
+        var items = new List<(string, string?, string?)> { (SourceText, SourceLang, null) };
+        items.AddRange(Keywords.Select(k => (k.Word, (string?)k.SourceLang, (string?)(k.IsEnglish ? accent : null))));
+        App.Speech.Prefetch(items);
     }
 
     private async Task StreamTranslationAsync(TranslationRequest request, int run, CancellationToken ct)
@@ -241,9 +256,16 @@ public sealed partial class TranslatePopupViewModel : ObservableObject
     {
         try
         {
-            var result = await App.Translator.AnalyzeAsync(request, ct);
+            var result = await App.Translator.AnalyzeAsync(request, ct, (lang, mode, fresh) =>
+            {
+                // 流式：每个重点词一完整就先显示出来
+                if (run != _run) return;
+                if (!string.IsNullOrWhiteSpace(lang)) SourceLang = lang;
+                if (mode != null) IsWordMode = mode == "word";
+                foreach (var k in fresh) Keywords.Add(new WordCardViewModel(k, SourceLang, SourceText, IsWordMode));
+            });
             if (run != _run) return null;
-            ApplyAnalysis(result);
+            MergeFinalAnalysis(result);
             return result;
         }
         catch (OperationCanceledException) { return null; }
@@ -259,6 +281,17 @@ public sealed partial class TranslatePopupViewModel : ObservableObject
         {
             if (run == _run) IsAnalyzing = false;
         }
+    }
+
+    /// <summary>Adds any key words the streaming pass missed without rebuilding cards the user may be interacting with.</summary>
+    private void MergeFinalAnalysis(AnalysisResult analysis)
+    {
+        if (!string.IsNullOrWhiteSpace(analysis.SourceLang)) SourceLang = analysis.SourceLang;
+        IsWordMode = analysis.IsWordMode;
+        var shown = Keywords.Select(k => k.Word).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var k in analysis.Keywords.Where(k => !shown.Contains(k.Word)))
+            Keywords.Add(new WordCardViewModel(k, SourceLang, SourceText, analysis.IsWordMode));
+        OnPropertyChanged(nameof(ShowEmptyKeywords));
     }
 
     private void ApplyAnalysis(AnalysisResult? analysis)

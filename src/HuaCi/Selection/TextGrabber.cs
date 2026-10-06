@@ -86,7 +86,8 @@ public sealed class TextGrabber
             text = ClipboardGuard.GetText();
         }
 
-        ClipboardGuard.Restore(snapshot);
+        if (snapshot != null) ClipboardGuard.Restore(snapshot);
+        else App.Log("读取剪贴板失败，未恢复原剪贴板内容（避免清空）");
         return text;
     }
 

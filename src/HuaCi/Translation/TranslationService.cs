@@ -20,10 +20,26 @@ public sealed class TranslationService
     public IAsyncEnumerable<string> TranslateStreamAsync(TranslationRequest r, CancellationToken ct) =>
         _client.StreamChatAsync(r.Model, Prompts.TranslationSystem(r), r.Text, 0.3, ct);
 
-    public async Task<AnalysisResult> AnalyzeAsync(TranslationRequest r, CancellationToken ct)
+    /// <summary>
+    /// Streams the key-word analysis. <paramref name="onKeywords"/> is called (on the caller's context) with the
+    /// source language / mode known so far and each newly completed key word, before the whole result is done.
+    /// </summary>
+    public async Task<AnalysisResult> AnalyzeAsync(
+        TranslationRequest r, CancellationToken ct,
+        Action<string?, string?, IReadOnlyList<WordEntry>>? onKeywords = null)
     {
-        var raw = await _client.CompleteJsonAsync(r.Model, Prompts.AnalysisSystem(r), r.Text, Prompts.AnalysisSchema(), ct);
-        return JsonExtract.ParseAnalysis(raw);
+        var parser = new IncrementalAnalysisParser();
+        string? lastMode = null;
+        await foreach (var chunk in _client.StreamJsonAsync(r.Model, Prompts.AnalysisSystem(r), r.Text, Prompts.AnalysisSchema(), ct))
+        {
+            var fresh = parser.Feed(chunk);
+            if (fresh.Count > 0 || parser.Mode != lastMode)
+            {
+                lastMode = parser.Mode;
+                onKeywords?.Invoke(parser.SourceLang, parser.Mode, fresh);
+            }
+        }
+        return JsonExtract.ParseAnalysis(parser.Text);
     }
 
     public CachedTranslation? TryGetCached(TranslationRequest r)

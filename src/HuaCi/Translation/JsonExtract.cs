@@ -27,16 +27,20 @@ public static class JsonExtract
                      ?? throw new FormatException("模型返回的 JSON 为空");
         result.Keywords ??= new();
         result.Keywords.RemoveAll(k => k is null || string.IsNullOrWhiteSpace(k.Word));
-        foreach (var k in result.Keywords)
-        {
-            k.Senses ??= new();
-            k.Collocations ??= new();
-            k.Senses.RemoveAll(s => s is null || string.IsNullOrWhiteSpace(s.Meaning));
-            k.PhoneticUs = TrimSlashes(k.PhoneticUs);
-            k.PhoneticUk = TrimSlashes(k.PhoneticUk);
-        }
+        foreach (var k in result.Keywords) Clean(k);
         result.Mode = result.Mode == "word" ? "word" : "text";
         return result;
+    }
+
+    /// <summary>Normalizes one entry: no null lists, no empty senses, phonetics without slashes/brackets.</summary>
+    public static WordEntry Clean(WordEntry k)
+    {
+        k.Senses ??= new();
+        k.Collocations ??= new();
+        k.Senses.RemoveAll(s => s is null || string.IsNullOrWhiteSpace(s.Meaning));
+        k.PhoneticUs = TrimSlashes(k.PhoneticUs);
+        k.PhoneticUk = TrimSlashes(k.PhoneticUk);
+        return k;
     }
 
     private static string TrimSlashes(string? s) => (s ?? "").Trim().Trim('/', '[', ']').Trim();
