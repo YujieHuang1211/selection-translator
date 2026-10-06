@@ -1,0 +1,22 @@
+<Window x:Class="HuaCi.UI.FloatingIcon"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="HuaCi"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ResizeMode="NoResize" ShowInTaskbar="False" Topmost="True" ShowActivated="False"
+        Width="44" Height="44" Focusable="False">
+    <Grid x:Name="Root" Cursor="Hand" ToolTip="翻译选中内容" RenderTransformOrigin="0.5,0.5"
+          MouseLeftButtonUp="Root_MouseLeftButtonUp" MouseEnter="Root_MouseEnter" MouseLeave="Root_MouseLeave">
+        <Grid.RenderTransform>
+            <ScaleTransform x:Name="Scale" ScaleX="1" ScaleY="1" />
+        </Grid.RenderTransform>
+        <Border x:Name="Bubble" Width="30" Height="30" CornerRadius="9" Background="{StaticResource HcBrandGradient}"
+                BorderBrush="#33FFFFFF" BorderThickness="1">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="10" ShadowDepth="2" Direction="270" Opacity="0.35" Color="#1E1B4B" />
+            </Border.Effect>
+            <TextBlock Text="译" FontFamily="Microsoft YaHei UI" FontWeight="Bold" FontSize="16" Foreground="White"
+                       HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-1,0,0" />
+        </Border>
+    </Grid>
+</Window>

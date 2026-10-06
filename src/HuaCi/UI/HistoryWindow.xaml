@@ -1,0 +1,156 @@
+<ui:FluentWindow x:Class="HuaCi.UI.HistoryWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 xmlns:controls="clr-namespace:HuaCi.UI.Controls"
+                 Title="HuaCi 划词翻译 · 历史与生词本"
+                 Width="760" Height="720" MinWidth="560" MinHeight="420"
+                 WindowStartupLocation="CenterScreen"
+                 ExtendsContentIntoTitleBar="True"
+                 WindowBackdropType="Mica"
+                 FontFamily="{StaticResource HcFont}">
+    <ui:FluentWindow.Resources>
+        <Style x:Key="RowCard" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="14,10,8,10" />
+            <Setter Property="Margin" Value="0,0,0,6" />
+        </Style>
+    </ui:FluentWindow.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <ui:TitleBar Title="HuaCi 划词翻译 · 历史与生词本">
+            <ui:TitleBar.Icon>
+                <ui:ImageIcon Source="pack://application:,,,/Assets/app.png" />
+            </ui:TitleBar.Icon>
+        </ui:TitleBar>
+
+        <TabControl x:Name="Tabs" Grid.Row="1" Margin="20,0,20,16" SelectionChanged="Tabs_SelectionChanged">
+            <!-- 历史记录 -->
+            <TabItem Header="历史记录">
+                <Grid Margin="0,12,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <DockPanel>
+                        <ui:Button DockPanel.Dock="Right" Margin="8,0,0,0" Content="清空历史" Click="ClearHistory_Click">
+                            <ui:Button.Icon>
+                                <ui:SymbolIcon Symbol="Delete20" />
+                            </ui:Button.Icon>
+                        </ui:Button>
+                        <ui:TextBox x:Name="HistorySearch" PlaceholderText="搜索原文或译文" TextChanged="HistorySearch_TextChanged">
+                            <ui:TextBox.Icon>
+                                <ui:SymbolIcon Symbol="Search20" />
+                            </ui:TextBox.Icon>
+                        </ui:TextBox>
+                    </DockPanel>
+                    <ScrollViewer Grid.Row="1" Margin="0,10,0,0" VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <ItemsControl x:Name="HistoryList">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource RowCard}" Cursor="Hand" MouseLeftButtonUp="HistoryItem_Click" ToolTip="点击在翻译窗口中打开">
+                                            <DockPanel>
+                                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                                                    <TextBlock Text="{Binding CreatedAt, StringFormat={}{0:MM-dd HH:mm}}" FontSize="12" VerticalAlignment="Center" Margin="0,0,4,0"
+                                                               Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                                                    <Button Style="{StaticResource HcIconButton}" Click="DeleteHistory_Click" ToolTip="删除">
+                                                        <ui:SymbolIcon Symbol="Dismiss16" FontSize="13" />
+                                                    </Button>
+                                                </StackPanel>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Text}" TextTrimming="CharacterEllipsis" MaxHeight="40" TextWrapping="Wrap"
+                                                               Foreground="{DynamicResource TextFillColorPrimaryBrush}" FontSize="13.5" />
+                                                    <TextBlock Text="{Binding Translation}" TextTrimming="CharacterEllipsis" MaxHeight="40" TextWrapping="Wrap" Margin="0,3,0,0"
+                                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="13" />
+                                                </StackPanel>
+                                            </DockPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock x:Name="HistoryEmpty" Text="还没有翻译记录" HorizontalAlignment="Center" Margin="0,40,0,0"
+                                       Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+
+            <!-- 生词本 -->
+            <TabItem Header="生词本">
+                <Grid Margin="0,12,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <ui:Button Margin="8,0,0,0" Content="导出 CSV" Click="ExportCsv_Click">
+                                <ui:Button.Icon>
+                                    <ui:SymbolIcon Symbol="ArrowDownload20" />
+                                </ui:Button.Icon>
+                            </ui:Button>
+                            <ui:Button Margin="8,0,0,0" Content="导出 Anki" Click="ExportAnki_Click">
+                                <ui:Button.Icon>
+                                    <ui:SymbolIcon Symbol="ArrowDownload20" />
+                                </ui:Button.Icon>
+                            </ui:Button>
+                        </StackPanel>
+                        <ui:TextBox x:Name="VocabSearch" PlaceholderText="搜索单词或释义" TextChanged="VocabSearch_TextChanged">
+                            <ui:TextBox.Icon>
+                                <ui:SymbolIcon Symbol="Search20" />
+                            </ui:TextBox.Icon>
+                        </ui:TextBox>
+                    </DockPanel>
+                    <ScrollViewer Grid.Row="1" Margin="0,10,0,0" VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <TextBlock x:Name="VocabCount" FontSize="12" Margin="2,0,0,6" Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                            <ItemsControl x:Name="VocabList">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource RowCard}">
+                                            <DockPanel>
+                                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                                                    <TextBlock Text="{Binding CreatedAt, StringFormat={}{0:yyyy-MM-dd}}" FontSize="12" VerticalAlignment="Center" Margin="0,0,4,0"
+                                                               Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                                                    <Button Style="{StaticResource HcIconButton}" Click="DeleteVocab_Click" ToolTip="从生词本移除">
+                                                        <ui:SymbolIcon Symbol="Dismiss16" FontSize="13" />
+                                                    </Button>
+                                                </StackPanel>
+                                                <StackPanel>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="{Binding Word}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"
+                                                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                                                        <TextBlock Text="{Binding Phonetic, StringFormat={}  /{0}/}" FontSize="13" VerticalAlignment="Center"
+                                                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                                   Visibility="{Binding Phonetic, Converter={StaticResource HasValueToVis}}" />
+                                                        <controls:SpeakButton Margin="4,0,0,0" Text="{Binding Word}" Lang="{Binding Lang}" />
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding Brief}" TextWrapping="Wrap" Margin="0,2,0,0" FontSize="13"
+                                                               Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                                                    <TextBlock Text="{Binding SourceSentence}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxHeight="36" Margin="0,4,0,0"
+                                                               FontSize="12" FontStyle="Italic" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                               Visibility="{Binding SourceSentence, Converter={StaticResource HasValueToVis}}" />
+                                                </StackPanel>
+                                            </DockPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock x:Name="VocabEmpty" Text="生词本是空的。在翻译窗口里点单词旁的 ☆ 就能收藏" HorizontalAlignment="Center" Margin="0,40,0,0"
+                                       Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</ui:FluentWindow>

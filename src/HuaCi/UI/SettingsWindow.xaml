@@ -1,0 +1,294 @@
+<ui:FluentWindow x:Class="HuaCi.UI.SettingsWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 Title="HuaCi 划词翻译 · 设置"
+                 Width="680" Height="760" MinWidth="560" MinHeight="480"
+                 WindowStartupLocation="CenterScreen"
+                 ExtendsContentIntoTitleBar="True"
+                 WindowBackdropType="Mica"
+                 FontFamily="{StaticResource HcFont}">
+    <ui:FluentWindow.Resources>
+        <Style x:Key="SettingCard" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="16,12" />
+            <Setter Property="Margin" Value="0,0,0,4" />
+        </Style>
+        <Style x:Key="SettingTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="SettingDesc" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Margin" Value="0,2,12,0" />
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+        </Style>
+        <Style x:Key="GroupTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="2,18,0,8" />
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+        </Style>
+        <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+            <Setter Property="MinWidth" Value="180" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </ui:FluentWindow.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <ui:TitleBar Title="HuaCi 划词翻译 · 设置" ShowMaximize="False" ShowMinimize="False">
+            <ui:TitleBar.Icon>
+                <ui:ImageIcon Source="pack://application:,,,/Assets/app.png" />
+            </ui:TitleBar.Icon>
+        </ui:TitleBar>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="28,4,28,24">
+                <ui:InfoBar x:Name="WelcomeBar" Title="欢迎使用 HuaCi 划词翻译" IsClosable="False" Severity="Informational" Margin="0,0,0,4"
+                            Message="先填入 OpenRouter API Key（在 openrouter.ai/keys 免费创建），点「测试连接」确认可用后保存即可开始划词翻译。" />
+
+                <!-- 翻译服务 -->
+                <TextBlock Style="{StaticResource GroupTitle}" Text="翻译服务" />
+                <Border Style="{StaticResource SettingCard}">
+                    <StackPanel>
+                        <DockPanel>
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="OpenRouter API Key" />
+                            <ui:HyperlinkButton DockPanel.Dock="Right" HorizontalAlignment="Right" Content="获取 Key" Padding="6,2"
+                                                NavigateUri="https://openrouter.ai/keys" />
+                        </DockPanel>
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ui:PasswordBox x:Name="ApiKeyBox" PlaceholderText="sk-or-v1-..." />
+                            <ui:Button x:Name="TestButton" Grid.Column="1" Margin="8,0,0,0" Content="测试连接" Click="TestButton_Click" />
+                        </Grid>
+                        <TextBlock x:Name="TestResult" Style="{StaticResource SettingDesc}" Visibility="Collapsed" />
+                        <TextBlock Style="{StaticResource SettingDesc}" Margin="0,6,0,0"
+                                   Text="Key 只保存在本机，并用 Windows 账户加密，不会上传到除 OpenRouter 以外的任何地方。" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource SettingCard}">
+                    <StackPanel>
+                        <DockPanel>
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="模型" />
+                            <ui:Button DockPanel.Dock="Right" HorizontalAlignment="Right" Content="恢复默认" Appearance="Transparent"
+                                       Padding="8,3" Click="ResetModel_Click" />
+                        </DockPanel>
+                        <ComboBox x:Name="ModelBox" Margin="0,8,0,0" IsEditable="True" IsTextSearchEnabled="True"
+                                  TextSearch.TextPath="Id" HorizontalAlignment="Stretch"
+                                  SelectionChanged="ModelBox_SelectionChanged">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Name}" />
+                                        <TextBlock FontSize="11.5" Foreground="{DynamicResource TextFillColorTertiaryBrush}">
+                                            <Run Text="{Binding Id, Mode=OneWay}" />
+                                            <Run Text=" · " />
+                                            <Run Text="{Binding PriceText, Mode=OneWay}" />
+                                        </TextBlock>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <TextBlock x:Name="ModelInfoText" Style="{StaticResource SettingDesc}" Margin="0,6,0,0"
+                                   Text="默认使用 DeepSeek V4.1 Flash：速度快、价格低。可以输入或搜索 OpenRouter 上的任意模型 ID。" />
+                    </StackPanel>
+                </Border>
+
+                <!-- 翻译方向 -->
+                <TextBlock Style="{StaticResource GroupTitle}" Text="翻译方向" />
+                <Border Style="{StaticResource SettingCard}">
+                    <DockPanel>
+                        <ComboBox x:Name="TargetBox" DockPanel.Dock="Right" DisplayMemberPath="DisplayName" SelectedValuePath="Code" />
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="译成" />
+                            <TextBlock Style="{StaticResource SettingDesc}" Text="外文默认翻译成这种语言" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+                <Border Style="{StaticResource SettingCard}">
+                    <DockPanel>
+                        <ComboBox x:Name="FallbackBox" DockPanel.Dock="Right" DisplayMemberPath="DisplayName" SelectedValuePath="Code" />
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="原文已是目标语言时译成" />
+                            <TextBlock Style="{StaticResource SettingDesc}" Text="例如选中中文时译成英语" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+                <Border Style="{StaticResource SettingCard}">
+                    <DockPanel>
+                        <ComboBox x:Name="ExplainBox" DockPanel.Dock="Right" DisplayMemberPath="DisplayName" SelectedValuePath="Code" />
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="词汇讲解语言" />
+                            <TextBlock Style="{StaticResource SettingDesc}" Text="重点词汇的释义、例句翻译用的语言" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+                <Border Style="{StaticResource SettingCard}">
+                    <DockPanel>
+                        <ComboBox x:Name="LevelBox" DockPanel.Dock="Right" DisplayMemberPath="Name" SelectedValuePath="Code" />
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="我的词汇水平" />
+                            <TextBlock Style="{StaticResource SettingDesc}" Text="只挑出超过这个水平的单词作为重点词汇讲解" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+
+                <!-- 划词 -->
+                <TextBlock Style="{StaticResource GroupTitle}" Text="划词与快捷键" />
+                <Border Style="{StaticResource SettingCard}">
+                    <DockPanel>
+                        <ui:ToggleSwitch x:Name="IconSwitch" DockPanel.Dock="Right" VerticalAlignment="Center" />
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="选中文字后显示「译」图标" />
+                            <TextBlock Style="{StaticResource SettingDesc}" Text="关闭后只能用快捷键翻译" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+                <Border Style="{StaticResource SettingCard}">
+                    <DockPanel>
+                        <ui:ToggleSwitch x:Name="TextCursorSwitch" DockPanel.Dock="Right" VerticalAlignment="Center" />
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="只在文本光标（I 形）处弹出" />
+                            <TextBlock Style="{StaticResource SettingDesc}" Text="避免拖动窗口、拖文件时误弹；如果某个软件里选字后不出图标，可以关掉试试" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+                <Border Style="{StaticResource SettingCard}">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Slider x:Name="IconSecondsSlider" Width="160" Minimum="2" Maximum="10" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
+                            <TextBlock Width="36" Margin="8,0,0,0" VerticalAlignment="Center" Text="{Binding Value, ElementName=IconSecondsSlider, StringFormat={}{0:0} 秒}" />
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource SettingTitle}" Text="图标自动消失时间" />
+                    </DockPanel>
+                </Border>
+                <Border Style="{StaticResource SettingCard}">
+                    <DockPanel>
+                        <ui:TextBox x:Name="HotkeyBox" DockPanel.Dock="Right" Width="180" IsReadOnly="True" ClearButtonEnabled="False"
+                                    PlaceholderText="点击后按下组合键" PreviewKeyDown="HotkeyBox_PreviewKeyDown" />
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="翻译快捷键" />
+                            <TextBlock x:Name="HotkeyDesc" Style="{StaticResource SettingDesc}" Text="选中文字后按下即可直接翻译；没有选中时会打开输入框。按 Backspace 清除" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+                <Border Style="{StaticResource SettingCard}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SettingTitle}" Text="不显示图标的程序" />
+                        <TextBlock Style="{StaticResource SettingDesc}" Text="填进程名，用逗号分隔，例如：photoshop, game.exe" />
+                        <ui:TextBox x:Name="BlacklistBox" Margin="0,8,0,0" PlaceholderText="例如：photoshop, cad" />
+                    </StackPanel>
+                </Border>
+
+                <!-- 发音 -->
+                <TextBlock Style="{StaticResource GroupTitle}" Text="发音" />
+                <Border Style="{StaticResource SettingCard}">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                            <RadioButton x:Name="UsRadio" Content="美音" GroupName="Accent" MinWidth="80" />
+                            <RadioButton x:Name="UkRadio" Content="英音" GroupName="Accent" MinWidth="80" />
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="英语句子默认口音" />
+                            <TextBlock Style="{StaticResource SettingDesc}" Text="单词卡片里美音、英音都可以单独点" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+                <Border Style="{StaticResource SettingCard}">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Slider x:Name="RateSlider" Width="160" Minimum="0.5" Maximum="1.5" TickFrequency="0.1" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
+                            <TextBlock Width="40" Margin="8,0,0,0" VerticalAlignment="Center" Text="{Binding Value, ElementName=RateSlider, StringFormat={}{0:0.0}x}" />
+                            <ui:Button Content="试听" Margin="8,0,0,0" Click="PreviewVoice_Click" />
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource SettingTitle}" Text="语速" />
+                    </DockPanel>
+                </Border>
+                <Border Style="{StaticResource SettingCard}">
+                    <DockPanel>
+                        <ui:ToggleSwitch x:Name="OfflineSwitch" DockPanel.Dock="Right" VerticalAlignment="Center" />
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="在线语音不可用时使用离线语音" />
+                            <TextBlock Style="{StaticResource SettingDesc}" Text="默认使用微软 Edge 神经网络语音（需联网），断网时自动改用 Windows 自带语音" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+
+                <!-- 外观 -->
+                <TextBlock Style="{StaticResource GroupTitle}" Text="外观" />
+                <Border Style="{StaticResource SettingCard}">
+                    <DockPanel>
+                        <ComboBox x:Name="ThemeBox" DockPanel.Dock="Right" SelectedValuePath="Tag">
+                            <ComboBoxItem Content="跟随系统" Tag="System" />
+                            <ComboBoxItem Content="浅色" Tag="Light" />
+                            <ComboBoxItem Content="深色" Tag="Dark" />
+                        </ComboBox>
+                        <TextBlock Style="{StaticResource SettingTitle}" Text="主题" />
+                    </DockPanel>
+                </Border>
+                <Border Style="{StaticResource SettingCard}">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Slider x:Name="FontSlider" Width="160" Minimum="12" Maximum="20" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
+                            <TextBlock Width="36" Margin="8,0,0,0" VerticalAlignment="Center" Text="{Binding Value, ElementName=FontSlider, StringFormat={}{0:0} px}" />
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource SettingTitle}" Text="翻译窗口字号" />
+                    </DockPanel>
+                </Border>
+                <Border Style="{StaticResource SettingCard}">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Slider x:Name="WidthSlider" Width="160" Minimum="360" Maximum="640" TickFrequency="20" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
+                            <TextBlock Width="36" Margin="8,0,0,0" VerticalAlignment="Center" Text="{Binding Value, ElementName=WidthSlider, StringFormat={}{0:0}}" />
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource SettingTitle}" Text="翻译窗口宽度" />
+                    </DockPanel>
+                </Border>
+
+                <!-- 其他 -->
+                <TextBlock Style="{StaticResource GroupTitle}" Text="其他" />
+                <Border Style="{StaticResource SettingCard}">
+                    <DockPanel>
+                        <ui:ToggleSwitch x:Name="AutoStartSwitch" DockPanel.Dock="Right" VerticalAlignment="Center" />
+                        <TextBlock Style="{StaticResource SettingTitle}" Text="开机自动启动" />
+                    </DockPanel>
+                </Border>
+                <Border Style="{StaticResource SettingCard}">
+                    <DockPanel>
+                        <ui:Button DockPanel.Dock="Right" Content="打开文件夹" Click="OpenDataFolder_Click" VerticalAlignment="Center" />
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="数据位置" />
+                            <TextBlock x:Name="DataDirText" Style="{StaticResource SettingDesc}" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+                <TextBlock Style="{StaticResource SettingDesc}" Margin="2,12,0,0"
+                           Text="提示：以管理员身份运行的程序里，需要以管理员身份运行本软件才能取词。" />
+            </StackPanel>
+        </ScrollViewer>
+
+        <Border Grid.Row="2" Padding="28,12" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}">
+            <DockPanel>
+                <TextBlock x:Name="SaveHint" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <ui:Button Content="取消" MinWidth="88" Click="Cancel_Click" />
+                    <ui:Button Content="保存" MinWidth="88" Margin="8,0,0,0" Appearance="Primary" Click="Save_Click" IsDefault="True" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+    </Grid>
+</ui:FluentWindow>

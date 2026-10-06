@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{5110E12C-4C92-431D-818F-1DF6CE7DE69A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HuaCi", "src\HuaCi\HuaCi.csproj", "{C0D67F69-A303-4845-9735-7915650F4B29}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{44827F0F-16AE-4A1D-845C-C7B4E51EE7F2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HuaCi.Tests", "tests\HuaCi.Tests\HuaCi.Tests.csproj", "{EE2AB7CC-6509-4D1F-B4C8-529EB10399AE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C0D67F69-A303-4845-9735-7915650F4B29}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C0D67F69-A303-4845-9735-7915650F4B29}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C0D67F69-A303-4845-9735-7915650F4B29}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C0D67F69-A303-4845-9735-7915650F4B29}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE2AB7CC-6509-4D1F-B4C8-529EB10399AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE2AB7CC-6509-4D1F-B4C8-529EB10399AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE2AB7CC-6509-4D1F-B4C8-529EB10399AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE2AB7CC-6509-4D1F-B4C8-529EB10399AE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C0D67F69-A303-4845-9735-7915650F4B29} = {5110E12C-4C92-431D-818F-1DF6CE7DE69A}
+		{EE2AB7CC-6509-4D1F-B4C8-529EB10399AE} = {44827F0F-16AE-4A1D-845C-C7B4E51EE7F2}
+	EndGlobalSection
+EndGlobal
